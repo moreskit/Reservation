@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block content %}
+{% if 'resy' not in accounts or not channels %}
+<div class="flash err">
+  {% if 'resy' not in accounts %}Resy isn't connected yet, so Joshy can't auto-book. {% endif %}
+  {% if not channels %}No notification channel is set up, so alerts only go to the log. {% endif %}
+  <a href="/connections">Fix it on Connections</a>.
+</div>
+{% endif %}
+<div class="grid">
+  <section class="card">
+    <h2>Watches</h2>
+    {% for w in watches %}
+    <div class="watch">
+      <div class="top">
+        <div class="name">
+          {% if w.venue_url %}<a href="{{ w.venue_url }}" target="_blank" rel="noopener">{{ w.venue_name }}</a>{% else %}{{ w.venue_name }}{% endif %}
+          <span class="meta">· {{ platforms[w.platform] }}</span>
+        </div>
+        <span class="status {{ w.status }}">{{ w.status }}</span>
+      </div>
+      <div class="meta">
+        Party of {{ w.party_size }} · {{ w.earliest }} to {{ w.latest }}{% if w.preferred %} (prefer {{ w.preferred }}){% endif %}
+        · {{ 'auto-book' if w.auto_book else 'notify only' }} · every {{ w.interval_secs }}s
+      </div>
+      <div class="chips">
+        {% for d in w.dates[:14] %}<span class="chip">{{ d }}</span>{% endfor %}
+        {% if w.dates|length > 14 %}<span class="chip">+{{ w.dates|length - 14 }} more</span>{% endif %}
+      </div>
+      {% if w.status == 'booked' and w.booking %}
+      <div class="booked-box">
+        Booked for <strong>{{ w.booking.when }}</strong>{% if w.booking.label %} ({{ w.booking.label }}){% endif %}.
+        Confirmation <code>{{ w.booking.confirmation }}</code>
+        {% if w.booking.cancellation_policy %}<div class="meta">{{ w.booking.cancellation_policy }}</div>{% endif %}
+      </div>
+      {% endif %}
+      {% if w.last_checked %}<div class="meta">Last check {{ w.last_checked[:19].replace('T', ' ') }} UTC: {{ w.last_result }}</div>{% endif %}
+      <div class="actions">
+        {% if w.status == 'active' %}
+          <form method="post" action="/watches/{{ w.id }}/check"><button class="ghost">Check now</button></form>
+          <form method="post" action="/watches/{{ w.id }}/pause"><button class="ghost">Pause</button></form>
+        {% elif w.status == 'paused' %}
+          <form method="post" action="/watches/{{ w.id }}/resume"><button class="ghost">Resume</button></form>
+        {% endif %}
+        {% if w.dates %}<a href="{{ link(w, w.dates[0]) }}" target="_blank" rel="noopener"><button class="ghost" type="button">Open booking page</button></a>{% endif %}
+        <form method="post" action="/watches/{{ w.id }}/delete" onsubmit="return confirm('Delete this watch?')"><button class="ghost danger">Delete</button></form>
+      </div>
+    </div>
+    {% else %}
+    <p class="empty">No watches yet. Add a restaurant on the right and Joshy will start checking.</p>
+    {% endfor %}
+  </section>
+
+  <div>
+    <section class="card">
+      <h2>New watch</h2>
+      <form method="post" action="/watches">
+        <label>Platform</label>
+        <select name="platform" id="platform" onchange="document.getElementById('autobook').style.display = this.value === 'resy' ? 'flex' : 'none'">
+          <option value="resy">Resy</option>
+          <option value="sevenrooms">SevenRooms</option>
+        </select>
+        <label>Restaurant link</label>
+        <input name="venue" required placeholder="https://resy.com/cities/new-york-ny/venues/...">
+        <div class="row">
+          <div><label>Party size</label><input type="number" name="party_size" min="1" max="20" value="2" required></div>
+          <div><label>Check every (sec)</label><input type="number" name="interval_secs" min="15" value="{{ default_interval }}"></div>
+        </div>
+        <div class="row">
+          <div><label>From date</label><input type="date" name="date_from" min="{{ today }}" value="{{ today }}" required></div>
+          <div><label>To date (optional)</label><input type="date" name="date_to" min="{{ today }}"></div>
+        </div>
+        <label>Only these days (optional)</label>
+        <div class="days">
+          {% for d in weekdays %}<label><input type="checkbox" name="weekdays" value="{{ loop.index0 }}">{{ d }}</label>{% endfor %}
+        </div>
+        <div class="row">
+          <div><label>Earliest</label><input type="time" name="earliest" value="18:00" required></div>
+          <div><label>Latest</label><input type="time" name="latest" value="21:00" required></div>
+          <div><label>Ideal (optional)</label><input type="time" name="preferred" value="19:30"></div>
+        </div>
+        <label class="check" id="autobook" style="margin-top: 14px">
+          <input type="checkbox" name="auto_book" value="1" checked> Book it automatically when a slot opens
+        </label>
+        <div style="margin-top: 16px"><button>Start watching</button></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Activity</h2>
+      <ul class="log">
+        {% for e in events %}
+        <li class="{{ e['level'] }}"><span class="meta">{{ e['ts'][5:16].replace('T', ' ') }}</span> {{ e['message'] }}</li>
+        {% else %}
+        <li class="empty">Nothing yet.</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+services:
+  joshy:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      JOSHY_DATA_DIR: /data
+    volumes:
+      - ./data:/data
+    ports:
+      - "8000:8000"

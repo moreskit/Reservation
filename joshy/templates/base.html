@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Joshy</title>
+<style>
+  :root {
+    --bg: #faf7f2; --card: #ffffff; --ink: #1d1b18; --muted: #6f6a62; --line: #e7e1d7;
+    --accent: #b5462e; --accent-ink: #ffffff; --ok: #2f7a4b; --warn: #a86b12; --bad: #b3261e;
+    --chip: #f1ece4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161412; --card: #201d1a; --ink: #f2ede6; --muted: #a39d93; --line: #35302a;
+      --accent: #e0714f; --accent-ink: #1a0f0b; --ok: #6cc28c; --warn: #e3a64a; --bad: #f08b84;
+      --chip: #2b2723;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+  header { display: flex; align-items: center; gap: 24px; padding: 16px 24px; border-bottom: 1px solid var(--line); }
+  header .brand { font-weight: 800; font-size: 22px; letter-spacing: -0.5px; color: var(--accent); text-decoration: none; }
+  header nav a { color: var(--muted); text-decoration: none; margin-right: 16px; }
+  header nav a.on { color: var(--ink); font-weight: 600; }
+  main { max-width: 1080px; margin: 0 auto; padding: 24px 16px 64px; }
+  h2 { font-size: 17px; margin: 0 0 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+  .grid { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+  @media (min-width: 900px) { .grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); } }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  input, select { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px;
+                  background: var(--bg); color: var(--ink); font: inherit; }
+  .row { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+  .days { display: flex; flex-wrap: wrap; gap: 6px; }
+  .days label { display: inline-flex; gap: 4px; align-items: center; margin: 0; padding: 4px 10px;
+                border: 1px solid var(--line); border-radius: 999px; color: var(--ink); cursor: pointer; }
+  .days input { width: auto; }
+  .check { display: flex; gap: 8px; align-items: center; color: var(--ink); font-size: 14px; }
+  .check input { width: auto; }
+  button { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 8px;
+           padding: 10px 16px; font: inherit; font-weight: 600; cursor: pointer; }
+  button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); padding: 6px 10px; font-weight: 500; }
+  button.danger { color: var(--bad); }
+  .flash { padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--line); }
+  .flash.ok { border-color: var(--ok); color: var(--ok); }
+  .flash.err { border-color: var(--bad); color: var(--bad); }
+  .watch { border-top: 1px solid var(--line); padding: 14px 0; }
+  .watch:first-of-type { border-top: 0; padding-top: 0; }
+  .watch .top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+  .watch .name { font-weight: 700; font-size: 16px; }
+  .watch .name a { color: inherit; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+  .chip { background: var(--chip); border-radius: 999px; padding: 1px 8px; font-size: 12px; }
+  .status { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .status.active { color: var(--accent); } .status.booked { color: var(--ok); }
+  .status.paused, .status.expired { color: var(--muted); }
+  .actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .actions form { margin: 0; }
+  .booked-box { background: var(--chip); border-radius: 8px; padding: 8px 12px; margin-top: 6px; font-size: 14px; }
+  .log { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+  .log li { padding: 6px 0; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+  .log li:first-child { border-top: 0; }
+  .log .success { color: var(--ok); } .log .warning { color: var(--warn); } .log .error { color: var(--bad); }
+  .empty { color: var(--muted); }
+  code { background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="/">Joshy</a>
+  <nav>
+    <a href="/" class="{{ 'on' if request.url.path == '/' }}">Watches</a>
+    <a href="/connections" class="{{ 'on' if request.url.path == '/connections' }}">Connections</a>
+  </nav>
+</header>
+<main>
+  {% if msg %}<div class="flash ok">{{ msg }}</div>{% endif %}
+  {% if err %}<div class="flash err">{{ err }}</div>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>
